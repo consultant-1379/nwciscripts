@@ -1,0 +1,69 @@
+# Eclipse
+.metadata
+.project
+.classpath
+.buildpath
+.launch
+.settings/
+test-output
+# Eclipse/PyDev
+.pydevproject
+
+# IntelliJ
+.idea/
+# other binaries
+*.tar
+*.tar.xz
+*.tar.bz2
+*.iso
+*.pyc
+*~
+.venv
+*.egg
+*.egg-info
+.tox
+
+# Maven
+target/
+*.versionsBackup
+
+# TAF
+curl.exe
+libeay32.dll
+libssl32.dll
+test-output/
+tmp/
+
+# Work litter
+.idea
+.lnk
+.nbattrs
+.settings
+.DS_Store
+*.bak
+*.class
+*.hi
+*.iml
+*.ipr
+*.iws
+*.lock
+*.log
+*.o
+*.out
+*.sublime-project
+*.sublime-workspace
+*.swo
+*.swp
+*.tmproj
+*.lnk
+*OUTPUT_FILE.json
+dump.*.db
+Thumbs.db
+worskpace.xml
+atlassian-ide-plugin.xml
+env.conf
+sed.json
+
+
+
+

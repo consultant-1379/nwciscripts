@@ -1,0 +1,21 @@
+<assembly>
+    <id>distribution</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <files>
+        <file>
+            <source>./src/main/java/com/ericsson/configuration/enm/upgrade/upgrade.sh</source>
+            <outputDirectory>automationScripts</outputDirectory>
+        </file>
+        <file>
+            <source>../nwciscripts-enm-common/etc/artifact_json_template.json</source>
+            <outputDirectory>automationScripts</outputDirectory>
+        </file>
+        <file>
+            <source>../nwciscripts-enm-common/etc/common.sh</source>
+            <outputDirectory>automationScripts</outputDirectory>
+        </file>
+    </files>
+</assembly>

@@ -1,0 +1,26 @@
+artifact_json_template="{
+    \"media_details\": {
+        media_details_content
+    },
+    \"cloud_templates_details\": {
+        cloud_templates_details_content
+    },
+    \"deployment_workflows_details\": {
+        deployment_workflows_details_content
+    },
+    \"cloud_mgmt_workflows_details\": {
+        cloud_mgmt_workflows_details_content
+    },
+    \"cloud_performance_workflows_details\": {
+        cloud_performance_workflows_details_content
+    },
+    \"vnflcm_cloudtemplates_details\": {
+        vnf_cloud_templates_details_content
+    },
+    \"edp_autodeploy_details\": {
+        edp_autodeploy_details_content
+    },
+    \"vnflcm_details\": {
+        vnflcm_details_content
+    }
+}"

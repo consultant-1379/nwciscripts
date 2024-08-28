@@ -1,0 +1,21 @@
+<assembly>
+    <id>distribution</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <files>
+        <file>
+            <source>./src/main/java/com/ericsson/configuration/enm/post_rollback/post_rollback.sh</source>
+            <outputDirectory>automationScripts</outputDirectory>
+        </file>
+        <file>
+            <source>../nwciscripts-enm-common/etc/common.sh</source>
+            <outputDirectory>automationScripts</outputDirectory>
+        </file>
+        <file>
+            <source>../nwciscripts-enm-common/etc/json_parser.py</source>
+            <outputDirectory>automationScripts</outputDirectory>
+        </file>
+    </files>
+</assembly>

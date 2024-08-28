@@ -1,0 +1,123 @@
+#!/bin/bash
+if [ -z $1 ]; then
+    atlasHostDetails="atlas3.serodc419.cloud.k2.ericsson.se::10.33.87.148"
+    cicHostDetails="ctrl3.serodc419.cloud.k2.ericsson.se::10.33.87.136"
+else
+    atlasHostDetails=$1
+    cicHostDetails=$2
+fi
+baseDir=`dirname "$0"`
+
+# Function used to update the /etc/hosts with the Atlas details
+function updateEtcHostsWithHostDetails() {
+   hostDetails=$1
+   hostFile=/etc/hosts
+   hostName=$( echo ${hostDetails} | sed 's/::/ /' | awk '{print $1}' )
+   ipAddress=$( echo ${hostDetails} | sed 's/::/ /' | awk '{print $2}' )
+   if [ ! -f ${hostFile}_ci_workaround_bckup ]; then
+	cp ${hostFile} ${hostFile}_ci_workaround_bckup
+   fi
+   if grep "${hostName}" ${hostFile} > /dev/null; then
+        echo "Already Present Skipping"
+   else
+        cp ${hostFile} ${hostFile}_ci_workaround_bckup
+        echo "${ipAddress}  ${hostName}" >> ${hostFile}
+   fi
+}
+
+# Function used to check the return code thtows an error if needed
+function checkReturnCode() {
+   errorCode=$1
+   command=$2
+   if [[ ${errorCode} != 0 ]]; then
+        echo "Issue executing a command exiting, \"${command}\""
+   fi
+}
+
+# Function used to stop a service
+function stopService() {
+   service=$1
+   # Check is the service already stopped. Exit if it is
+   service ${service} status > /dev/null
+   returnCode=$( echo $? )
+   checkReturnCode ${returnCode} "service ${service} status (Service Already Stopped)"
+   # Stop the service
+   service ${service} stop > /dev/null
+   returnCode=$( echo $? )
+   checkReturnCode ${returnCode} "service ${service} stop"
+   # check has the service stopped should return an non 0 return code
+   service ${service} status > /dev/null
+   returnCode=$( echo $? )
+   if [[ returnCode == 0 ]]; then
+        checkReturnCode 1 "service ${service} status"
+   fi
+}
+
+# Function used to start a service
+function startService() {
+   service=$1
+   # Check is the service already started. Exit if it is
+   service ${service} status
+   returnCode=$( echo $? )
+   if [[ returnCode == 0 ]]; then
+        checkReturnCode 1 "service ${service} status (Service is Already Started)"
+   fi
+   # Start the service
+   service ${service} start
+   returnCode=$( echo $? )
+   checkReturnCode ${returnCode} "service ${service} start"
+   # check has the service stopped should return an non 0 return code
+   service ${service} status
+   returnCode=$( echo $? )
+   checkReturnCode ${returnCode} "service ${service} status"
+}
+
+# Function used to update the JDK Version on th Server
+function updateJDKVersion() {
+   #Check to see what version is already installed
+   jdkVersion="1.7.0_131"
+   jdkRpmUrl="https://arm3s11-eiffel004.eiffel.gic.ericsson.se:8443/nexus/service/local/repositories/releases/content/com/ericsson/td/jdk/${jdkVersion}/jdk-${jdkVersion}.rpm"
+   ls /usr/java | grep "${jdkVersion}" > /dev/null
+   returnCode=$( echo $? )
+   if [[ returnCode != 0 ]]; then
+        stopService jboss
+        stopService modeldeployservice
+        curl -o ${baseDir}/jdk-${jdkVersion}.rpm ${jdkRpmUrl} 
+        returnCode=$( echo $? )
+        checkReturnCode ${returnCode} "${jdkRpmUrl}"
+        rpm -ivh ${baseDir}/jdk-${jdkVersion}.rpm
+        returnCode=$( echo $? )
+        checkReturnCode ${returnCode} "rpm -ivh ${baseDir}/jdk-${jdkVersion}.rpm"
+        startService jboss
+        startService modeldeployservice
+        ls /usr/java | grep "${jdkVersion}" > /dev/null
+        returnCode=$( echo $? )
+        checkReturnCode ${returnCode} "ls /usr/java | grep \"${jdkVersion}\" (Version didn't seem to upgrade correctly)"
+   else
+        echo "The correct java version is installed, \"${jdkVersion}\""
+   fi
+}
+
+# Function used to update the /etc/hosts with the Atlas details
+function updateSSLCerts() {
+   atlasHostDetails=$1
+   cicHostDetails=$2
+   atlasHostName=$( echo ${atlasHostDetails} | sed 's/::/ /' | awk '{print $1}' )
+   atlasIpAddress=$( echo ${atlasHostDetails} | sed 's/::/ /' | awk '{print $2}' )
+   cicHostName=$( echo ${cicHostDetails} | sed 's/::/ /' | awk '{print $1}' )
+   cicIpAddress=$( echo ${cicHostDetails} | sed 's/::/ /' | awk '{print $2}' )
+   openssl s_client -showcerts -connect ${cicHostName}:5000 < /dev/null | openssl x509 -outform DER > /tmp/os_17_cert.cer
+   openssl s_client -showcerts -connect ${atlasHostName}:443 < /dev/null | openssl x509 -outform DER > /tmp/os_17_2_cert.cer
+   echo -e "yes" | /usr/java/latest/bin/keytool -import -alias ca34 -file /tmp/os_17_2_cert.cer -keystore /usr/java/latest/jre/lib/security/cacerts -storepass changeit
+   echo -e "yes" | /usr/java/latest/bin/keytool -import -alias ca22 -file /tmp/os_17_cert.cer -keystore /usr/java/latest/jre/lib/security/cacerts -storepass changeit
+}
+
+# Main Function calls
+echo "Update /etc/hosts with Atlas Hostname"
+updateEtcHostsWithHostDetails ${atlasHostDetails}
+updateEtcHostsWithHostDetails ${cicHostDetails}
+echo "Update JDK Version"
+updateJDKVersion
+echo "Update the SSL Certs"
+updateSSLCerts ${atlasHostDetails} ${cicHostDetails}
+echo "Completed"
